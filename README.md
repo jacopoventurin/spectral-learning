@@ -8,7 +8,7 @@ Install the package from source by calling `pip install .`
 from the repository's root directory.
 
 ### Example usage
-`
+```python
 import torch
 import torch.nn as nn
 from Spectral import Spectral, Pruning, update_train
@@ -23,4 +23,4 @@ Pruning(spectral_model, 70, input_fixed=True)
 
 #allow training on all parameters
 update_train(spectral_model, base=True, diag_start=True, diag_end=True)
-`
+````

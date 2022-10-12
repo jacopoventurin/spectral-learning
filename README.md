@@ -16,6 +16,9 @@ from Spectral import Spectral, Pruning, update_train
 #define model
 spectral_model = nn.Sequential(Spectral(10,200), nn.Tanh(), Spectral(200,1))
 
+#allow training on eigenvalues
+update_train(spectral_model, base=False, diag_start=True, diag_end=True)
+
 #some training...
 
 #pruning

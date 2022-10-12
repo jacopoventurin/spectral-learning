@@ -8,4 +8,14 @@ Install the package from source by calling `pip install .`
 from the repository's root directory.
 
 ### Example usage
+import torch
+import torch.nn as nn
+from Spectral import Spectral, Pruning, update_train
 
+spectral_model = nn.Sequential(Spectral(10,200), nn.Tanh(), Spectral(200,1))
+
+some training.....
+
+Pruning(spectral_model, 70, input_fixed=True)
+
+update_train(spectral_model, base=True, diag_start=True, diag_end=True)

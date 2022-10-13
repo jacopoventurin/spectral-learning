@@ -120,21 +120,6 @@ class Pruning:
 
         return index
 
-    def find_top_end(self, module, dim):
-        """
-        Method to find index of dim higher value in diag_end of a given module. It returns new index
-        and prune diag end
-        """
-        diag_end = module.diag_end.detach()
-        abs_diag_end = torch.abs(diag_end)
-        _, index = torch.topk(abs_diag_end, dim, dim=1)
-        index = torch.reshape(index,(dim,))
-        diag_end = diag_end[0, index]
-
-        module.diag_end = nn.Parameter(diag_end)
-
-        return torch.Tensor(index)
-
     def prune_diag_end(self, module, new_index):
         diag_end = module.diag_end.detach()
         diag_end = diag_end[0, new_index]

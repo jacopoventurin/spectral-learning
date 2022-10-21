@@ -163,16 +163,17 @@ class Pruning:
         if j < self.deep:
             self.prune_diag_start(module, new_index_start[j])
             self.prune_diag_end(module, new_index_start[j+1])
-            self.prune_base(module, new_index_start[j], new_index_start[j+1])
+            self.prune_base(module,
+                            new_index_start=new_index_start[j],
+                            new_index_end=new_index_start[j+1])
             module.in_dim = len(new_index_start[j])
             module.out_dim = len(new_index_start[j+1])
 
         else:
             self.prune_diag_start(module, new_index_start[j])
-            start_dim = len(new_index_start[j])
-            end_dim = len(module.diag_end)
-            new_index_end = self.find_top_end(module, end_dim)
-            self.prune_base(module, new_index_start[j], new_index_end)
+            self.prune_base(module,
+                            new_index_start=new_index_start[j],
+                            new_index_end=None)
             module.in_dim = len(new_index_start[j])
 
 

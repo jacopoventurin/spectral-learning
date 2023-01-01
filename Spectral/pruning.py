@@ -7,8 +7,7 @@ from Spectral import Spectral, update_train
 
 class Pruning:
     """
-    Class for the application of pruning procedure. In this case only eigenvalues in diag_start are pruned,
-    while eigenvalues in diag_end are used as control to match the right number of nodes.
+    Class for the application of pruning procedure. In this case only eigenvalues in diag_start are pruned.
     This class work correctly only if all the layers in the network are Spectral.
 
     Parameters:
@@ -120,22 +119,13 @@ class Pruning:
 
         return index
 
-    def find_top_end(self, module, dim):
-        """
-        Method to find index of dim higher value in diag_end of a given module. It returns new index
-        and prune diag end
-        """
+    def prune_diag_end(self, module, new_index):
         diag_end = module.diag_end.detach()
-        abs_diag_end = torch.abs(diag_end)
-        _, index = torch.topk(abs_diag_end, dim, dim=1)
-        index = torch.reshape(index,(dim,))
-        diag_end = diag_end[0, index]
-
+        diag_end = diag_end[0, new_index]
         module.diag_end = nn.Parameter(diag_end)
 
-        return torch.Tensor(index)
 
-    def prune_diag(self, module, new_index):
+    def prune_diag_start(self, module, new_index):
         """
         Method to prune diag_start using new indexes
 
@@ -144,7 +134,7 @@ class Pruning:
         diag_start = diag_start[new_index]
         module.diag_start = nn.Parameter(diag_start)
 
-    def prune_base(self, module, new_index_start, new_index_end):
+    def prune_base(self, module, new_index_start, new_index_end=None):
         """
         Method to prune base and eventual bias using new indexes.
         If new_index_end = None only input is pruned
@@ -152,34 +142,40 @@ class Pruning:
         """
         base = module.base
 
-        base = base[:, new_index_end]
-        if module.bias is not None:
-            bias = module.bias.detach()
-            bias = bias[new_index_end]
-            module.bias = nn.Parameter(bias)
+        if new_index_end is not None:
+            base = base[:, new_index_end]
+            if module.bias is not None:
+                bias = module.bias.detach()
+                bias = bias[new_index_end]
+                module.bias = nn.Parameter(bias)
 
-        base = base[new_index_start, :]
-        module.base = nn.Parameter(base)
+            base = base[new_index_start, :]
+            module.base = nn.Parameter(base)
+        else:
+            base = base[new_index_start, :]
+            module.base = nn.Parameter(base)
+
+
 
     def prune_model(self, module: Spectral, new_index_start: list, j: int):
         """Method that prune a module deep j, according to new_index"""
         if j < self.deep:
-            self.prune_diag(module, new_index_start[j])
-            start_dim = len(new_index_start[j])
-            end_dim = len(new_index_start[j+1])
-            new_index_end = self.find_top_end(module, end_dim)
-            self.prune_base(module, new_index_start[j], new_index_end)
+            self.prune_diag_start(module, new_index_start[j])
+            self.prune_diag_end(module, new_index_start[j+1])
+            self.prune_base(module,
+                            new_index_start=new_index_start[j],
+                            new_index_end=new_index_start[j+1])
+            module.in_dim = len(new_index_start[j])
+            module.out_dim = len(new_index_start[j+1])
 
         else:
-            self.prune_diag(module, new_index_start[j])
-            start_dim = len(new_index_start[j])
-            end_dim = len(module.diag_end)
-            new_index_end = self.find_top_end(module, end_dim)
-            self.prune_base(module, new_index_start[j], new_index_end)
+            self.prune_diag_start(module, new_index_start[j])
+            self.prune_base(module,
+                            new_index_start=new_index_start[j],
+                            new_index_end=None)
+            module.in_dim = len(new_index_start[j])
 
-        # Save changes in module
-        module.in_dim = start_dim
-        module.out_dim = end_dim
+
 
     def show_result(self):
         print("New pruned model:")

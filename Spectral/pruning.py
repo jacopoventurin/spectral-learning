@@ -7,8 +7,7 @@ from Spectral import Spectral, update_train
 
 class Pruning:
     """
-    Class for the application of pruning procedure. In this case only eigenvalues in diag_start are pruned,
-    while eigenvalues in diag_end are used as control to match the right number of nodes.
+    Class for the application of pruning procedure. In this case only eigenvalues in diag_start are pruned.
     This class work correctly only if all the layers in the network are Spectral.
 
     Parameters:
